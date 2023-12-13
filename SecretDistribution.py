@@ -1,0 +1,1 @@
+print("Start random presents selection to 2023 Christmas - Casa Da Aldeia!")
