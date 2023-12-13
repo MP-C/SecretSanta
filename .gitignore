@@ -1,5 +1,7 @@
 ### Python
 listNames.txt
+listNames.json
+amigos_secretos.txt
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
