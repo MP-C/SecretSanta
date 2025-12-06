@@ -1,144 +1,230 @@
 import random
 import json
-# Importação mantida, mas a URL será simulada
-#import requests
+import os  # Para verificar a existência de ficheiros e limpeza
 
-localJantar ="Casa da Aldeia"
-valor ="2€ - 7€"
-print(f"A iniciar o sorteio de presentes de Natal 2023, 2025... - {localJantar}")
 
-# --- 1. Carregar Dados ---
-try:
-    # 1.1 Carregar lista de participantes (GIVERS)
-    with open("listNames.json", "r", encoding="utf-8") as arquivo_nomes:
-        participantes = json.load(arquivo_nomes)
-        print("...Ficheiro Participantes carregado")
+# --- Classes de Modelo de Dados ---
 
-    # 1.2 Carregar missões secretas
-    # CORREÇÃO: Usar o handle 'arquivosecreto' correto e não o 'arquivo' anterior.
-    with open("missaoSecreta.json", "r", encoding="utf-8") as arquivosecreto:
-        missaoSecreta_data = json.load(arquivosecreto)
-        print("...Ficheiro Missões carregado")
+class Participante:
+    """Representa um participante do sorteio."""
 
-except FileNotFoundError as e:
-    print(
-        f"ERRO: Ficheiro não encontrado. Certifique-se de que 'listNames.json' e 'missaoSecreta.json' estão no mesmo diretório. Detalhes: {e}")
-    exit()
-except json.JSONDecodeError:
-    print("ERRO: O ficheiro JSON está mal formatado. Por favor, verifique a sintaxe.")
-    exit()
+    def __init__(self, nome: str, telefone: str, missao: str):
+        self.nome = nome
+        self.telefone = telefone
+        self.tem_missao = missao.lower() == "sim"
+        self.amigo_secreto = None  # O nome do recetor
+        self.missao_atribuida = None  # O objeto de missão (dict)
 
-# Lista de participantes (Givers)
-print(f"\nParticipantes carregados: {len(participantes)}")
-print(f"Missoes carregadas: {len(missaoSecreta_data)}")
+    def __repr__(self):
+        return f"Participante(Nome='{self.nome}', Missão={self.tem_missao})"
 
-# Cria uma cópia da lista de missões para o 'pool'
-missao_pool = list(missaoSecreta_data)
-print(f"Local: {localJantar}\n")
-amigos_secretos = []
-missao_texto = ''
-exemplo_missao = ''
 
-# --- 2. Lógica de Sorteio Robusto ---
-# Sorteio robusto: Garante que ninguém tira o seu próprio nome.
-# 1. Criar uma lista de recetores (recipients)
-recetores = participantes[:]
+class SorteioConfig:
+    """Contém configurações globais do evento."""
 
-# 2. Baralhar a lista de recetores
-random.shuffle(recetores)
+    def __init__(self, local_jantar: str, valor_presente: str, ficheiro_nomes: str, ficheiro_missoes: str, data_entrega: str ):
+        self.local_jantar = local_jantar
+        self.valor_presente = valor_presente
+        self.ficheiro_nomes = ficheiro_nomes
+        self.ficheiro_missoes = ficheiro_missoes
+        self.data_entrega = data_entrega
+        print(f"Local jantar: {self.local_jantar}, Valor Presente: {self.valor_presente}, Data Entrega: {self.data_entrega}")
 
-# 3. Corrigir o sorteio se alguém calhar consigo mesmo (muito importante no Amigo Secreto)
-# A rotação garante que a correspondência de nomes próprios é resolvida de forma aleatória.
-max_tentativas = len(participantes)
-tentativas = 0
-while any(participantes[i]['nome'] == recetores[i]['nome'] for i in
-          range(len(participantes))) and tentativas < max_tentativas:
-    # Roda a lista de recetores por uma posição
-    recetores = recetores[1:] + recetores[:1]
-    tentativas += 1
+# --- Classe Principal de Lógica ---
+class SorteioAmigoSecreto:
+    """Gerencia o carregamento de dados, a lógica de sorteio e a geração de mensagens."""
+    def __init__(self, config: SorteioConfig):
+        self.config = config
+        self.participantes = []
+        self.missoes_pool = []
+        # Os nomes dos ficheiros são acedidos via self.config
+        print(f"A iniciar o sorteio de presentes de Natal 2025... - {config.local_jantar}")
 
-if tentativas == max_tentativas:
-    print("\nAVISO: Não foi possível realizar o sorteio sem auto-atribuição após várias tentativas. Tente novamente.")
-    exit()
+    def _carregar_dados(self) -> bool:
+        """Carrega os dados dos ficheiros JSON."""
+        print("\n--- 1. Carregar Dados ---")
 
-# Limpar o ficheiro anterior de amigos secretos
-with open("amigos_secretos.txt", "w", encoding="utf-8") as arquivo_saida:
-    arquivo_saida.write("--- LISTA DE AMIGOS SECRETOS E MENSAGENS ---\n\n")
+        # 1.1 Carregar Participantes
+        try:
+            with open(self.config.ficheiro_nomes, "r", encoding="utf-8") as arquivo_nomes:
+                data_participantes = json.load(arquivo_nomes)
+                self.participantes = [Participante(**p) for p in data_participantes]
+                print(
+                    f"...Ficheiro Participantes ({self.config.ficheiro_nomes}) carregado. Total: {len(self.participantes)}")
+        except FileNotFoundError:
+            print(f"ERRO: Ficheiro não encontrado: '{self.ficheiro_participantes}'")
+            return False
+        except json.JSONDecodeError:
+            print(f"ERRO: O ficheiro JSON '{self.ficheiro_participantes}' está mal formatado.")
+            return False
 
-# --- 3. Atribuição de Missão e Geração de Mensagens ---
-print("Distribuição:")
-for i in range(len(participantes)):
-    #print("participante:", participantes[i])
-    nomeParticipante = participantes[i].get("nome")
-    nomeAmigoSecreto = recetores[i].get("nome")  # O recetor é o amigo secreto
-    contactoParticipante = participantes[i].get("telefone")
-    missaoSimOuNao = participantes[i].get("missão")
-    #print("missão", missaoSimOuNao)
-    secreto = ""
-    print(f"{nomeParticipante} --> {nomeAmigoSecreto} (Missão: {missaoSimOuNao})")
+        # 1.2 Carregar Missões
+        try:
+            with open(self.config.ficheiro_missoes, "r", encoding="utf-8") as arquivosecreto:
+                self.missoes_pool = json.load(arquivosecreto)  # Lista de dicts
+                print(f"...Ficheiro ({self.config.ficheiro_missoes}) carregado. Total: {len(self.missoes_pool)}")
+        except FileNotFoundError:
+            print(f"ERRO: Ficheiro não encontrado: '{self.config.ficheiro_missoes}'")
+            return False
+        except json.JSONDecodeError:
+            print(f"ERRO: O ficheiro JSON '{self.config.ficheiro_missoes}' está mal formatado.")
+            return False
+        return True
 
-    # Lógica de atribuição de Missão Secreta (apenas se 'sim')
-    if missaoSimOuNao == "sim":
-        if missao_pool:
-            # 1. Escolher uma missão aleatória do pool
-            chosen_mission_object = random.choice(missao_pool)
-            print("mission_object:",chosen_mission_object)
-            # 2. Extrair o texto da missão
-            missao_texto = chosen_mission_object.get("missao", "Missão não especificada")
-            exemplo_missao = chosen_mission_object.get("Exemplo", "Exemplo não fornecido")
+    def _realizar_sorteio_robusto(self) -> bool:
+        """Realiza o sorteio garantindo que ninguém tira o próprio nome."""
+        print("\n--- 2. Lógica de Sorteio Robusto ---")
 
-            # 3. Remover a missão do pool para garantir que não se repete
-            missao_pool.remove(chosen_mission_object)
+        # Lista de nomes (Givers)
+        nomes_participantes = [p.nome for p in self.participantes]
 
-            # 4. Construir o bloco secreto
-            secreto = f"""\nEste ano há uma variação, e tens uma missão secreta associada. O sucesso desta missão depende unicamente de ti.
-Tens de: {missao_texto}. Exemplo: {exemplo_missao}
+        # Lista de participantes (Recipients) - A ser baralhada
+        recetores = self.participantes[:]
+        random.shuffle(recetores)
+
+        max_tentativas = len(self.participantes) * 2  # Aumentar tentativas para maior segurança
+        tentativas = 0
+
+        while any(self.participantes[i].nome == recetores[i].nome for i in
+                  range(len(self.participantes))) and tentativas < max_tentativas:
+            # Rotação da lista de recetores (os Amigos Secretos)
+            recetores = recetores[1:] + recetores[:1]
+            tentativas += 1
+
+        if tentativas >= max_tentativas:
+            print("\nAVISO: Não foi possível realizar o sorteio sem auto-atribuição após as tentativas.")
+            return False
+
+        total=0
+        # Atribuir o amigo secreto a cada participante
+        for i in range(len(self.participantes)):
+            self.participantes[i].amigo_secreto = recetores[i].nome
+            total += i
+            print(f"Sorteio: {self.participantes[i].nome} --> {self.participantes[i].amigo_secreto}")
+
+        print(f"\nSorteio concluído com sucesso. Total: {total}")
+        return True
+
+    def _atribuir_missoes(self):
+        """Atribui missões aos participantes marcados como 'sim'."""
+
+        # Cria uma cópia da pool de missões para atribuição, garantindo que não se repete
+        missoes_disponiveis = list(self.missoes_pool)
+        total = 0
+        for participante in self.participantes:
+            if participante.tem_missao:
+                if missoes_disponiveis:
+                    # Escolher e remover a missão do pool
+                    missao_escolhida = random.choice(missoes_disponiveis)
+                    participante.missao_atribuida = missao_escolhida
+                    missoes_disponiveis.remove(missao_escolhida)
+                    total += 1
+                    print(f"Missão atribuída a: {participante.nome}")
+
+                else:
+                    # Se não houver missões disponíveis, atribui uma mensagem padrão
+                    #participante.missao_atribuida = {"missao": "Fica atento", "Exemplo": "Surpresa extra"}
+                    print(f"Sem missões disponíveis para: {participante.nome}. Atribuído aviso.")
+        print(f"\nTotal de missoes atribuidas: {total}\n")
+
+    def _gerar_mensagem_secreta(self, participante: Participante) -> str:
+        """Gera o bloco de texto 'secreto' (missão ou aviso)."""
+        if participante.tem_missao and participante.missao_atribuida:
+            missao_texto = participante.missao_atribuida.get("missao", "Missão não especificada")
+            exemplo_missao = participante.missao_atribuida.get("Exemplo", "Exemplo não fornecido")
+
+            return f"""\nEste ano há uma variação, e tens uma **missão secreta** associada. O sucesso desta missão depende unicamente de ti.
+Tens de: **{missao_texto}**. Exemplo: {exemplo_missao}
 Algumas pessoas têm as suas missões, outras não, também tens de descobrir.
 Se por acaso, achas que descobriste a missão de alguém. Alinha! e não contes nada.
 Assim, quem não descobriu tem tempo, e está em jogo, e quem não tem missão, continua confuso"""
         else:
-            secreto = f"""Este ano, há supresas extras...Fica atento"""
+            return f"""\nEste ano, há surpresas extras...Fica atento"""
 
-    # Construção da mensagem
-    mensagem = f"""\n{[i + 1]}) Olá, {nomeParticipante}! Bem vind@ à 💌 Missão de Natal.
-Esta mensagem, apesar de enviada de um número pessoal, é o seu aviso oficial de Amigo Secreto!\nA sua missão é presentear o amigo-secreto: {nomeAmigoSecreto}!
-🎁 Os Detalhes do Jogo:\nPreço: Aproximadamente {valor} (Sem exageros!)\nData de Entrega: 24/12/2025, na {localJantar}.
-🎭 A Regra de Ouro: A entrega será feita num divertido jogo estilo "Pictionary de Comportamento":\nAntes de entregar o presente, terá de imitar um comportamento, mania ou expressão famosa da pessoa que o irá receber.
+    def _gerar_mensagem_completa(self, participante: Participante) -> str:
+        """Constrói a mensagem completa para um participante."""
+        secreto = self._gerar_mensagem_secreta(participante)
+
+        mensagem = f"""\nOlá, {participante.nome}! Bem vind@ à 💌 Missão de Natal.
+Esta mensagem, apesar de enviada de um número pessoal, é o seu aviso oficial de Amigo Secreto!
+A sua missão é presentear o amigo-secreto: **{participante.amigo_secreto}**!
+🎁 Os Detalhes do Jogo:
+Preço: Aproximadamente **{self.config.valor_presente}** (Sem exageros!)
+Data de Entrega: **{self.config.data_entrega}**, na **{self.config.local_jantar}**.
+🎭 A Regra de Ouro: A entrega será feita num divertido jogo estilo "**Pictionary de Comportamento**":
+Antes de entregar o presente, terá de imitar um comportamento, mania ou expressão famosa da pessoa que o irá receber.
 Só após ser adivinhado é que pode entregar o presente. O seu Amigo Secreto terá, por sua vez, de repetir a proeza para a pessoa que o presenteou.
-❓ Dúvidas e Contactos: Em caso de dúvidas, a Maria Fernanda ou o encarregado desta mensagem terão todo o prazer em ajudar.\n
+❓ Dúvidas e Contactos: Em caso de dúvidas, a Maria Fernanda ou o encarregado desta mensagem terão todo o prazer em ajudar.
+
 Boa criatividade e Divirte-te!
 P.S. Mantenham o segredo! Especialmente casais (discrição máxima entre vocês!) e filhos (sejam subtis com os pais!).
 P.S. 2. Para os menos íntimos: Não há desculpas! Criatividade é a chave. Desenrasquem-se! 😉
 {secreto}
 Mário Pedro
 ---------\n"""
+        return mensagem
 
-    # Abrir e escrever no ficheiro de output
-    with open("amigos_secretos.txt", "a", encoding="utf-8") as arquivo_saida:
-        arquivo_saida.write(mensagem)
+    def _simular_envio_sms(self, participante: Participante, mensagem: str):
+        """Simula a parte de envio de SMS."""
+        # Variáveis simuladas
+        YOUR_API_KEY = 'whatsapp/'
+        YOUR_PHONE_NUMBER = '+320000000'
 
-    # --- 4. Envio de SMS (Simulação) ---
-    # A parte do envio de SMS é mantida, mas a URL não é funcional sem a chave.
+        # A URL de SMS seria construída aqui, mas a chamada requests é omitida
+        url_simulada = f"https://api.smsapi.com/v1/sms/send?api_key={YOUR_API_KEY}&to={participante.telefone}&from={YOUR_PHONE_NUMBER}&text=..."
 
-    YOUR_API_KEY = 'whatsapp/'  # Chave API simulada
-    YOUR_PHONE_NUMBER = '+320000000'  # Número simulado
+        # Simulação
+        print(f"SIMULAÇÃO: SMS seria enviado para {participante.nome} em {participante.telefone}")
+        # print(f"URL: {url_simulada[:120]}...")
+        # Descomentar para ver a URL
 
-    # Correção: usar o contactoParticipante (que é a string do número) e não a lista
-    # Nota: Removido [1] do contactoParticipante, que só daria erro.
+    def executar_sorteio(self):
+        """Método principal que orquestra todo o processo."""
 
-    # Construir a URL (Atenção: A API de SMS requer URL encoding, omitido para simplificar)
-    url = f"https://api.smsapi.com/v1/sms/send?api_key={YOUR_API_KEY}&to={contactoParticipante}&from={YOUR_PHONE_NUMBER}&text={mensagem}"
+        if not self._carregar_dados():
+            return
 
-    # Apenas simular o envio para evitar erros.
-    # #Enviar a solicitação
-    # response = requests.post(url)
-    # 
-    # #Verificar o código de resposta
-    # if response.status_code == 200:
-    #     print(f"SMS enviado com sucesso para {nomeParticipante}.")
-    # else:
-    #     print(f"Erro ao enviar SMS para {nomeParticipante}. (Status: {response.status_code})")
-    print(f"SIMULAÇÃO: SMS seria enviado para {nomeParticipante} em {contactoParticipante}")
+        if not self._realizar_sorteio_robusto():
+            return
 
-print("\n--- FIM DO SORTEIO ---")
-print("Verifique o ficheiro 'amigos_secretos.txt' para as mensagens completas.")
+        self._atribuir_missoes()
+        print("--- 3. Geração de Mensagens e Simulação de Envio ---")
+
+        ficheiro_saida = "amigos_secretos.txt"
+
+        # Limpar o ficheiro anterior
+        with open(ficheiro_saida, "w", encoding="utf-8") as arquivo_saida:
+            arquivo_saida.write("--- LISTA DE AMIGOS SECRETOS E MENSAGENS ---\n\n")
+
+        # Gerar mensagens, salvar e simular envio
+        for i, participante in enumerate(self.participantes):
+            mensagem_completa = self._gerar_mensagem_completa(participante)
+
+            # Adicionar índice de série para o ficheiro
+            mensagem_com_indice = f"\n{[i + 1]}){mensagem_completa[1:]}"
+
+            # Escrever no ficheiro de output
+            with open(ficheiro_saida, "a", encoding="utf-8") as arquivo_saida:
+                arquivo_saida.write(mensagem_com_indice)
+
+            # Simular Envio
+            self._simular_envio_sms(participante, mensagem_completa)
+
+        print("\n--- FIM DO SORTEIO ---")
+        print(f"Verifique o ficheiro '{ficheiro_saida}' para as mensagens completas.")
+
+
+# --- Execução Principal (Ponto de Entrada) ---
+if __name__ == "__main__":
+    # 1. Configurar o evento (TUDO num único local)
+    configuracao = SorteioConfig(
+        local_jantar="Casa da Aldeia",
+        valor_presente="2€ - 7€",
+        ficheiro_nomes="listNames.json",
+        ficheiro_missoes="missaoSecreta.json",
+        data_entrega="24/12/2025"
+    )
+
+    # 2. Instanciar e Executar
+    sorteio_app = SorteioAmigoSecreto(configuracao)
+    sorteio_app.executar_sorteio()
