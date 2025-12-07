@@ -1,0 +1,12 @@
+# Configurações do Evento
+LOCAL_JANTAR=""
+VALOR_PRESENTE="5"
+DATA_ENTREGA="24/12/2025"
+
+# Ficheiros de Dados
+FICHEIRO_NOMES="exemple_ListToRandomise.json"
+FICHEIRO_MISSOES="missaoSecreta.json"
+
+# (Opcional) Chaves de API Simuladas
+API_KEY='whatsapp/'
+PHONE_NUMBER='+320000000'
