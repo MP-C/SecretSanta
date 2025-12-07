@@ -1,7 +1,7 @@
 import random
 import json
 import os  # Para verificar a existência de ficheiros e limpeza
-
+from dotenv import load_dotenv
 
 # --- Classes de Modelo de Dados ---
 
@@ -22,12 +22,13 @@ class Participante:
 class SorteioConfig:
     """Contém configurações globais do evento."""
 
-    def __init__(self, local_jantar: str, valor_presente: str, ficheiro_nomes: str, ficheiro_missoes: str, data_entrega: str ):
+    def __init__(self, local_jantar: str, valor_presente: str, ficheiro_nomes: str, ficheiro_missoes: str, data_entrega: str, ficheiro_saida: str):
         self.local_jantar = local_jantar
         self.valor_presente = valor_presente
         self.ficheiro_nomes = ficheiro_nomes
         self.ficheiro_missoes = ficheiro_missoes
         self.data_entrega = data_entrega
+        self.ficheiro_saida = ficheiro_saida
         print(f"Local jantar: {self.local_jantar}, Valor Presente: {self.valor_presente}, Data Entrega: {self.data_entrega}")
 
 # --- Classe Principal de Lógica ---
@@ -75,9 +76,6 @@ class SorteioAmigoSecreto:
         """Realiza o sorteio garantindo que ninguém tira o próprio nome."""
         print("\n--- 2. Lógica de Sorteio Robusto ---")
 
-        # Lista de nomes (Givers)
-        nomes_participantes = [p.nome for p in self.participantes]
-
         # Lista de participantes (Recipients) - A ser baralhada
         recetores = self.participantes[:]
         random.shuffle(recetores)
@@ -85,8 +83,7 @@ class SorteioAmigoSecreto:
         max_tentativas = len(self.participantes) * 2  # Aumentar tentativas para maior segurança
         tentativas = 0
 
-        while any(self.participantes[i].nome == recetores[i].nome for i in
-                  range(len(self.participantes))) and tentativas < max_tentativas:
+        while any(self.participantes[i].nome == recetores[i].nome for i in range(len(self.participantes))) and tentativas < max_tentativas:
             # Rotação da lista de recetores (os Amigos Secretos)
             recetores = recetores[1:] + recetores[:1]
             tentativas += 1
@@ -99,18 +96,18 @@ class SorteioAmigoSecreto:
         # Atribuir o amigo secreto a cada participante
         for i in range(len(self.participantes)):
             self.participantes[i].amigo_secreto = recetores[i].nome
-            total += i
+            total += 1
             print(f"Sorteio: {self.participantes[i].nome} --> {self.participantes[i].amigo_secreto}")
 
-        print(f"\nSorteio concluído com sucesso. Total: {total}")
+        print(f"--------------------------------\nSorteio concluído com sucesso. Total: {total}")
         return True
 
     def _atribuir_missoes(self):
         """Atribui missões aos participantes marcados como 'sim'."""
-
         # Cria uma cópia da pool de missões para atribuição, garantindo que não se repete
         missoes_disponiveis = list(self.missoes_pool)
         total = 0
+        print("\nDistribuir missoes:...")
         for participante in self.participantes:
             if participante.tem_missao:
                 if missoes_disponiveis:
@@ -125,7 +122,7 @@ class SorteioAmigoSecreto:
                     # Se não houver missões disponíveis, atribui uma mensagem padrão
                     #participante.missao_atribuida = {"missao": "Fica atento", "Exemplo": "Surpresa extra"}
                     print(f"Sem missões disponíveis para: {participante.nome}. Atribuído aviso.")
-        print(f"\nTotal de missoes atribuidas: {total}\n")
+        print(f"-----------------------------------\nTotal de missoes atribuidas: {total}\n")
 
     def _gerar_mensagem_secreta(self, participante: Participante) -> str:
         """Gera o bloco de texto 'secreto' (missão ou aviso)."""
@@ -166,17 +163,16 @@ Mário Pedro
 
     def _simular_envio_sms(self, participante: Participante, mensagem: str):
         """Simula a parte de envio de SMS."""
-        # Variáveis simuladas
-        YOUR_API_KEY = 'whatsapp/'
-        YOUR_PHONE_NUMBER = '+320000000'
+        # Ler diretamente do ambiente
+        YOUR_API_KEY = os.getenv('API_KEY', 'default_key')
+        YOUR_PHONE_NUMBER = os.getenv('PHONE_NUMBER', '+000000000')
 
         # A URL de SMS seria construída aqui, mas a chamada requests é omitida
         url_simulada = f"https://api.smsapi.com/v1/sms/send?api_key={YOUR_API_KEY}&to={participante.telefone}&from={YOUR_PHONE_NUMBER}&text=..."
 
         # Simulação
         print(f"SIMULAÇÃO: SMS seria enviado para {participante.nome} em {participante.telefone}")
-        # print(f"URL: {url_simulada[:120]}...")
-        # Descomentar para ver a URL
+        print(f"URL: {url_simulada[:120]}...")
 
     def executar_sorteio(self):
         """Método principal que orquestra todo o processo."""
@@ -190,10 +186,8 @@ Mário Pedro
         self._atribuir_missoes()
         print("--- 3. Geração de Mensagens e Simulação de Envio ---")
 
-        ficheiro_saida = "amigos_secretos.txt"
-
         # Limpar o ficheiro anterior
-        with open(ficheiro_saida, "w", encoding="utf-8") as arquivo_saida:
+        with open(configuracao.ficheiro_saidaa, "w", encoding="utf-8") as arquivo_saida:
             arquivo_saida.write("--- LISTA DE AMIGOS SECRETOS E MENSAGENS ---\n\n")
 
         # Gerar mensagens, salvar e simular envio
@@ -204,25 +198,31 @@ Mário Pedro
             mensagem_com_indice = f"\n{[i + 1]}){mensagem_completa[1:]}"
 
             # Escrever no ficheiro de output
-            with open(ficheiro_saida, "a", encoding="utf-8") as arquivo_saida:
+            with open(configuracao.ficheiro_saida, "a", encoding="utf-8") as arquivo_saida:
                 arquivo_saida.write(mensagem_com_indice)
 
             # Simular Envio
             self._simular_envio_sms(participante, mensagem_completa)
 
         print("\n--- FIM DO SORTEIO ---")
-        print(f"Verifique o ficheiro '{ficheiro_saida}' para as mensagens completas.")
+        print(f"Verifique o ficheiro '{configuracao.ficheiro_saida}' para as mensagens completas.")
 
 
 # --- Execução Principal (Ponto de Entrada) ---
 if __name__ == "__main__":
-    # 1. Configurar o evento (TUDO num único local)
+    # Carregar as variáveis do ficheiro .env para o ambiente
+    load_dotenv()
+
+    print("...Configurações lidas do .env")
+
+    # 1. Configurar o evento, lendo diretamente do ambiente (os.environ ou os.getenv)
     configuracao = SorteioConfig(
-        local_jantar="Casa da Aldeia",
-        valor_presente="2€ - 7€",
-        ficheiro_nomes="listNames.json",
-        ficheiro_missoes="missaoSecreta.json",
-        data_entrega="24/12/2025"
+        local_jantar=os.getenv("LOCAL_JANTAR"),
+        valor_presente=os.getenv("VALOR_PRESENTE"),
+        ficheiro_nomes=os.getenv("FICHEIRO_NOMES"),
+        ficheiro_missoes=os.getenv("FICHEIRO_MISSOES"),
+        data_entrega=os.getenv("DATA_ENTREGA"),
+        ficheiro_saida=os.getenv("FICHEIRO_SAIDA")
     )
 
     # 2. Instanciar e Executar
