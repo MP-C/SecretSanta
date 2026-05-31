@@ -1,0 +1,17 @@
+<!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@400;500;600&display=swap"><link rel="stylesheet" href="/static/style.css"><script src="/static/common.js"></script><title>A tua missão de Natal</title></head><body><header><a class="marca" href="/">✦ Missão de Natal</a><nav id="apoio" aria-label="Apoiar o projeto"></nav></header>
+<main><h1 id="ola">A carregar…</h1><div class="orn" aria-hidden="true">✦</div><div id="conteudo"></div><p id="erro" role="alert"></p></main>
+<script>
+const t=location.pathname.split("/").pop();
+api("/api/reveal/"+t).then(r=>{const c=r.config;
+$("#ola").textContent="Olá, "+r.nome+"!";
+$("#conteudo").innerHTML=`<p class="sub">A tua missão é presentear o teu amigo secreto. Toca na etiqueta quando ninguém estiver a ver.</p>
+<button class="etiqueta" id="et"><small>O teu amigo secreto é</small><strong id="nm">Toca para abrir</strong></button><div id="mi" hidden class="missao"></div>
+<div class="cartao"><h2>Os detalhes do jogo</h2><dl><dt>Preço</dt><dd>Aproximadamente ${esc(c.valor)} (sem exageros!)</dd><dt>Entrega</dt><dd>${esc(c.data)}, em ${esc(c.local)}</dd><dt>Dúvidas</dt><dd>${esc(c.contacto||"o encarregado da mensagem")}</dd></dl>
+<p><strong>A regra de ouro:</strong> a entrega é um jogo de "Pictionary de Comportamento". Antes de entregar o presente, imita um comportamento, gesto, mania ou expressão típica de quem o recebe. Só depois de adivinhado é que o presente é entregue. O teu amigo secreto repete a proeza para quem o presenteou.</p>
+<p>Mantém o segredo, sobretudo entre casais e com os filhos.</p></div>
+<p class="sub">O organizador só vê se já abriste a etiqueta, nunca o que lá aparece.</p>`;
+$("#et").onclick=async()=>{if($("#et").classList.contains("aberta"))return;
+try{const a=await api("/api/reveal/"+t+"/abrir",{method:"POST"}),m=a.missao;
+$("#nm").textContent=a.amigo;$("#et").classList.add("aberta");const x=$("#mi");x.hidden=false;
+x.innerHTML=m?`<h2>A tua missão secreta</h2><p>${esc(m.missao)}</p><p><em>Exemplo: ${esc(m.exemplo)}</em></p><p>Há quem tenha missão e quem não tenha, e tens de o descobrir. Se achares que descobriste a missão de alguém, alinha e não contes nada.</p>`:"<h2>Este ano há surpresas extras</h2><p>Fica atento.</p>"}catch(e){$("#erro").textContent=e.message}}}).catch(e=>{$("#ola").textContent="Link inválido";$("#erro").textContent=e.message});
+</script></body></html>
