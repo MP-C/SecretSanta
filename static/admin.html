@@ -1,15 +1,11 @@
 <!doctype html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@400;500;600&display=swap"><link rel="stylesheet" href="/static/style.css"><script src="/static/common.js"></script><title>Enviar convites</title></head><body><header><a class="marca" href="/">✦ Missão de Natal</a><nav id="apoio" aria-label="Apoiar o projeto"></nav></header>
 <main><h1>Sorteio feito</h1><div class="orn" aria-hidden="true">✦</div>
-<p class="sub">Envia a cada pessoa a sua mensagem. <strong>Guarda esta página nos favoritos</strong>: é a única forma de voltares aos links. Tu não vês quem tirou quem.</p>
+<p class="sub">Envia a cada pessoa a sua mensagem. <strong>Guarda esta página nos favoritos</strong>: é a única forma de voltares aos links.</p>
 <section class="cartao"><dl id="info"><dt>Estado</dt><dd>A carregar…</dd></dl><div class="barra"><i id="prog"></i></div></section>
+<section class="cartao"><h2>Ações</h2><div class="acoes"><button type="button" class="b b-wa" id="fila"></button><button type="button" class="b" id="baixar"></button><button type="button" class="b b-verm" id="apagar"></button></div>
+<details class="ajuda"><summary>Como enviar a todos e o que cada botão faz</summary>
+<p><strong>Abrir WhatsApp 1 de N:</strong> cada clique abre a conversa seguinte já com a mensagem escrita. O WhatsApp não permite que um site envie sozinho, por isso falta carregares em enviar.</p>
+<p><strong>Envio 100% automático:</strong> só a partir do teu computador, com WhatsApp Web ligado: <code id="cmd"></code>. Não mexas no teclado durante o envio.</p>
+<p><strong>Descarregar controlo:</strong> ficheiro com quem tirou quem neste sorteio. Guarda-o em segredo. <strong>Apagar:</strong> remove do servidor todos os dados deste sorteio.</p></details></section>
 <section class="cartao" id="lista"></section><p id="erro" role="alert"></p></main>
-<script>
-const t=location.pathname.split("/").pop();let S=[],ult="";
-const row=(p,i)=>`<div class="item"><div class="quem"><span class="nome">${esc(p.nome)}</span><span class="estado ${p.visto?"ok":""}">${p.visto?"✓ Viu em "+esc(p.visto):"Ainda não viu"}</span></div><div class="acoes"><a class="b b-wa" target="_blank" rel="noopener" href="${esc(p.whatsapp)}">${ICON.send}<span>WhatsApp</span></a><button class="b" data-l="${i}" title="Copiar link" aria-label="Copiar link de ${esc(p.nome)}">${ICON.clip}<span class="lbl">Copiar link</span></button><a class="b" target="_blank" rel="noopener" href="${esc(p.link)}" title="Abrir link" aria-label="Abrir link de ${esc(p.nome)}">${ICON.ext}<span class="lbl">Abrir</span></a><button class="b" data-m="${i}" title="Copiar mensagem" aria-label="Copiar mensagem de ${esc(p.nome)}">${ICON.msg}<span class="lbl">Mensagem</span></button></div></div>`;
-function mostrar(s){const k=JSON.stringify(s);if(k===ult)return;ult=k;S=s.participantes;const c=s.config,v=S.filter(p=>p.visto).length;
-$("#info").innerHTML=`<dt>Local</dt><dd>${esc(c.local)}</dd><dt>Valor</dt><dd>${esc(c.valor)}</dd><dt>Data</dt><dd>${esc(c.data)}</dd><dt>Já viram</dt><dd>${v} de ${S.length}</dd>`;
-$("#prog").style.width=(S.length?100*v/S.length:0)+"%";$("#lista").innerHTML=S.map(row).join("")}
-$("#lista").onclick=e=>{const b=e.target.closest("button");if(!b)return;copiar(b,b.dataset.l!=null?S[b.dataset.l].link:S[b.dataset.m].mensagem)};
-const carregar=()=>{if(!document.hidden)api("/api/admin/"+t).then(mostrar).catch(e=>$("#erro").textContent=e.message)};
-carregar();setInterval(carregar,20000);
-</script></body></html>
+<script src="/static/admin.js"></script></body></html>

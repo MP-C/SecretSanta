@@ -1,68 +1,72 @@
-# 💌 SecretSanta – Christmas Mission
+# 💌 SecretSanta – Missão de Natal
 
-Website and backend to organize a **Secret Santa with secret missions**. The organizer enters the participants; the draw is done instantly, and each person receives a **personal link** via WhatsApp where they can see their Secret Santa match, their mission, and event details. No one (not even the organizer) can see anyone else's draw.
+Site e backend para organizar um **amigo secreto com missões secretas**. Quem organiza indica os participantes; o sorteio é feito de imediato e cada pessoa recebe por WhatsApp um **link pessoal** onde vê o seu amigo secreto, a missão e os detalhes do evento. Ninguém (nem o organizador) vê o sorteio dos outros.
 
-## Features
-- Upload participants from a file (`.json` or `.txt` with `Name; phone; mission; group` lines) directly in your browser.
-- Web form: participants (name, phone), location, budget, date, and contact person for questions.
-- Mission per person: **with**, **without**, or **random** (50%). Missions are pulled from `missaoSecreta.json` and are never repeated.
-- Groups (couples, families): people in the same group won't draw each other. No one draws themselves.
-- Ready-to-send WhatsApp message per person (`wa.me`), with a link to their personal page.
-- Control file (`ficheiro_controlo.txt`) tracking who drew whom, kept exclusively on the server for the controller.
-- Header with links to support the project (Revolut / Buy Me a Coffee).
+## Funcionalidades
+- Carregar participantes de um ficheiro (.json ou .txt com linhas `Nome; telefone; missão; grupo`) no próprio browser.
+- Formulário web: participantes (nome, telefone), local, valor, data e quem esclarece dúvidas.
+- Missão por pessoa: **com**, **sem** ou **aleatória** (50%). As missões vêm de `missaoSecreta.json` e não se repetem.
+- Grupos (casais, famílias): quem está no mesmo grupo não se tira. Ninguém tira a si próprio.
+- Mensagem de WhatsApp pronta por pessoa (`wa.me`), com link para a página pessoal.
+- Ficheiro de controlo (`ficheiro_controlo.txt`) com quem tirou quem, só no servidor, para o controlador.
+- Cabeçalho com links para apoiar o projeto (Revolut / Buy Me a Coffee).
 
-## Missions: With, Without, or Random
-The mission is an extra challenge, randomly chosen from `missaoSecreta.json` and never repeated. **With mission**: always receives one. **Without mission**: never receives one. **Random (50%)**: the system decides at random whether they get one or not. This is independent of who draws whom.
+## Missões: com, sem ou à sorte
+A missão é um desafio extra, escolhido ao acaso de `missaoSecreta.json` e nunca repetido. **Com missão**: recebe sempre uma. **Sem missão**: nunca recebe. **À sorte (50%)**: o sistema decide ao acaso se recebe ou não. É independente de quem tira quem.
 
-## Structure
-```text
-app.py                      Flask Backend (API + pages)
-secret_santa/core.py        Draw logic, missions, messages, storage
-SecretDistribution.py       Terminal mode, no website
-static/                     Front-end (index, admin, reveal)
-missaoSecreta.json          List of missions (theme, mission, example)
-exemplo_participantes.json  Example for terminal mode
-.env.example                Configuration (copy to .env)
+## Estrutura
 ```
-Draw data is stored in `data/` and control data in `ficheiro_controlo.txt`. Both are included in `.gitignore`.
+app.py                 Backend Flask (API + páginas)
+secret_santa/core.py   Sorteio, missões, mensagem, armazenamento
+SecretDistribution.py  Modo terminal, sem site
+static/                Front-end (index, admin, reveal)
+missaoSecreta.json     Lista de missões (tema, missao, exemplo)
+exemplo_participantes.json  Exemplo para o modo terminal
+.env.example           Configuração (copiar para .env)
+```
+Os sorteios ficam em `data/` e o controlo em `ficheiro_controlo.txt`. Ambos estão no `.gitignore`.
 
-## Installation
+## Instalação
 ```bash
 pip install -r requirements.txt
-cp .env.example .env      # edit values
+cp .env.example .env      # editar valores
 python app.py             # http://localhost:5000
 ```
-Production: Run `gunicorn app:app` behind your domain with HTTPS and configure `LINK_DOMINIO`, ensuring the message links are correct.
+Produção: `gunicorn app:app` atrás do teu domínio com HTTPS e `LINK_DOMINIO` configurado, para os links nas mensagens estarem certos.
 
-## Usage
-1. Open the website, fill in the event and participant details, and click **Draw and Generate Links**.
-2. On the next page, click **Send on WhatsApp** for each person. **Bookmark the page**.
-3. Each person opens their link, taps the gift tag, and sees their Secret Santa match and mission.
-4. Controller: check `ficheiro_controlo.txt` on the server.
+## Uso
+1. Abre o site, preenche o evento e os participantes e clica em **Sortear e gerar links**.
+2. Na página seguinte, clica em **Enviar no WhatsApp** para cada pessoa. **Guarda a página nos favoritos**.
+3. Cada pessoa abre o link, toca na etiqueta e vê o amigo secreto e a missão.
+4. Controlador: consulta `ficheiro_controlo.txt` no servidor.
 
-### Terminal Mode (No Website)
-Create `listNames.json` (see `exemplo_participantes.json`; `missao`: `sim`, `nao`, or `aleatorio`; `grupo` is optional) and run:
+### Modo terminal (sem site)
+Cria `listNames.json` (ver `exemplo_participantes.json`; `missao`: `sim`, `nao` ou `aleatorio`; `grupo` opcional) e corre:
 ```bash
-python SecretDistribution.py            # prints WhatsApp links
-python SecretDistribution.py --enviar   # sends via WhatsApp Web (requires pywhatkit)
+python SecretDistribution.py            # imprime os links de WhatsApp
+python SecretDistribution.py --enviar   # envia via WhatsApp Web (requer pywhatkit)
 ```
 
-## Configuration (`.env`)
-| Variable | Description |
+## Configuração (`.env`)
+| Variável | Descrição |
 |---|---|
-| `LOCAL_JANTAR`, `VALOR_PRESENTE`, `DATA_ENTREGA`, `CONTACTO` | Default values for the form and message |
-| `LINK_DOMINIO` | Public domain of the website |
-| `INDICATIVO_PAIS` | Country code for 9-digit phone numbers (default `351`) |
-| `APOIO_PAYPAL`, `APOIO_REVOLUT`, `APOIO_BUYMEACOFFEE` | Links for the "Support" window in the header (leave empty to hide) |
-| `DATA_DIR`, `FICHEIRO_MISSOES`, `FICHEIRO_CONTROLO`, `FICHEIRO_NOMES` | File paths |
+| `LOCAL_JANTAR`, `VALOR_PRESENTE`, `DATA_ENTREGA`, `CONTACTO` | Valores por defeito do formulário e da mensagem |
+| `LINK_DOMINIO` | Domínio público do site |
+| `INDICATIVO_PAIS` | Indicativo para números de 9 dígitos (por defeito `351`) |
+| `APOIO_PAYPAL`, `APOIO_REVOLUT`, `APOIO_BUYMEACOFFEE` | Links da janela "Apoiar" no cabeçalho (vazio = oculto) |
+| `DATA_DIR`, `FICHEIRO_MISSOES`, `FICHEIRO_CONTROLO`, `FICHEIRO_NOMES` | Caminhos de ficheiros |
 
-## Invite Status
-On the admin page, you can see who has tapped their gift tag (and when), without seeing who they drew.
+## Estado dos convites
+Na página de admin vês quem já tocou na etiqueta (e quando), sem ver o nome que lhe saiu.
 
-## Links in Messages
-`LINK_DOMINIO` must be an address accessible to your guests. `localhost` only works on your computer. For testing, use a tunnel (e.g., Cloudflare Tunnel or ngrok) and put that address in your `.env`.
+## Links nas mensagens
+O `LINK_DOMINIO` tem de ser um endereço acessível aos convidados. `localhost` só funciona no teu computador. Para testar, usa um túnel (ex.: Cloudflare Tunnel ou ngrok) e põe esse endereço no `.env`.
 
-## Privacy
-Each link has a hard-to-guess random token. All data (including phone numbers) stays solely on your server. Delete the `data/` folder after the event.
+## Segurança (o que está feito e o que falta)
+Feito: tokens aleatórios de 96+ bits; sem cookies (sem CSRF); texto sempre escapado e CSP sem scripts inline; limites de tamanho e de pedidos por IP; escritas atómicas; servidor só em `127.0.0.1` por defeito; erros sem detalhes internos; botão para apagar o sorteio.
+Falta (é contigo): usar **HTTPS** (proxy ou Cloudflare Tunnel) com `TRUST_PROXY=1`; correr com `gunicorn -w 1 --threads 8 app:app` (Linux) ou `waitress-serve --listen=127.0.0.1:5000 app:app` (Windows), nunca com `app.py` em produção; os dados (nomes, telefones) ficam em `data/` em texto simples, por isso protege o disco e apaga depois do evento. Não foi feito teste de intrusão.
 
-License: see `LICENSE`.
+## Privacidade
+Cada link tem um token aleatório difícil de adivinhar. Os dados (incluindo telefones) ficam só no teu servidor. Apaga `data/` depois do evento.
+
+Licença: ver `LICENSE`.

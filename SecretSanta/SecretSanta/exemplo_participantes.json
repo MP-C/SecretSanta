@@ -1,0 +1,29 @@
+[
+  {
+    "nome": "John Doe",
+    "telefone": "+351 912 000 010",
+    "missao": "sim",
+    "grupo": "casal1"
+  },
+  {
+    "nome": "John Smith",
+    "telefone": "+351 912 000 020",
+    "missao": "aleatorio",
+    "grupo": "casal1"
+  },
+  {
+    "nome": "Jane Roe",
+    "telefone": "+351 912 000 030",
+    "missao": "nao"
+  },
+  {
+    "nome": "Mary Major",
+    "telefone": "+351 912 000 040",
+    "missao": "sim"
+  },
+  {
+    "nome": "Tom Minor",
+    "telefone": "+351 912 000 050",
+    "missao": "nao"
+  }
+]

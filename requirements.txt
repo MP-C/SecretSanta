@@ -1,5 +1,6 @@
 flask>=3.0
 python-dotenv>=1.0
 gunicorn>=22.0
+waitress>=3.0
 # Só para o modo terminal com --enviar:
 # pywhatkit

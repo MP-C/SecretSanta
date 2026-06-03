@@ -3,6 +3,7 @@
 Site e backend para organizar um **amigo secreto com missões secretas**. Quem organiza indica os participantes; o sorteio é feito de imediato e cada pessoa recebe por WhatsApp um **link pessoal** onde vê o seu amigo secreto, a missão e os detalhes do evento. Ninguém (nem o organizador) vê o sorteio dos outros.
 
 ## Funcionalidades
+- Carregar participantes de um ficheiro (.json ou .txt com linhas `Nome; telefone; missão; grupo`) no próprio browser.
 - Formulário web: participantes (nome, telefone), local, valor, data e quem esclarece dúvidas.
 - Missão por pessoa: **com**, **sem** ou **aleatória** (50%). As missões vêm de `missaoSecreta.json` e não se repetem.
 - Grupos (casais, famílias): quem está no mesmo grupo não se tira. Ninguém tira a si próprio.
@@ -52,7 +53,7 @@ python SecretDistribution.py --enviar   # envia via WhatsApp Web (requer pywhatk
 | `LOCAL_JANTAR`, `VALOR_PRESENTE`, `DATA_ENTREGA`, `CONTACTO` | Valores por defeito do formulário e da mensagem |
 | `LINK_DOMINIO` | Domínio público do site |
 | `INDICATIVO_PAIS` | Indicativo para números de 9 dígitos (por defeito `351`) |
-| `APOIO_REVOLUT`, `APOIO_BUYMEACOFFEE` | Links mostrados no cabeçalho (vazio = oculto) |
+| `APOIO_PAYPAL`, `APOIO_REVOLUT`, `APOIO_BUYMEACOFFEE` | Links da janela "Apoiar" no cabeçalho (vazio = oculto) |
 | `DATA_DIR`, `FICHEIRO_MISSOES`, `FICHEIRO_CONTROLO`, `FICHEIRO_NOMES` | Caminhos de ficheiros |
 
 ## Estado dos convites
@@ -60,6 +61,10 @@ Na página de admin vês quem já tocou na etiqueta (e quando), sem ver o nome q
 
 ## Links nas mensagens
 O `LINK_DOMINIO` tem de ser um endereço acessível aos convidados. `localhost` só funciona no teu computador. Para testar, usa um túnel (ex.: Cloudflare Tunnel ou ngrok) e põe esse endereço no `.env`.
+
+## Segurança (o que está feito e o que falta)
+Feito: tokens aleatórios de 96+ bits; sem cookies (sem CSRF); texto sempre escapado e CSP sem scripts inline; limites de tamanho e de pedidos por IP; escritas atómicas; servidor só em `127.0.0.1` por defeito; erros sem detalhes internos; botão para apagar o sorteio.
+Falta (é contigo): usar **HTTPS** (proxy ou Cloudflare Tunnel) com `TRUST_PROXY=1`; correr com `gunicorn -w 1 --threads 8 app:app` (Linux) ou `waitress-serve --listen=127.0.0.1:5000 app:app` (Windows), nunca com `app.py` em produção; os dados (nomes, telefones) ficam em `data/` em texto simples, por isso protege o disco e apaga depois do evento. Não foi feito teste de intrusão.
 
 ## Privacidade
 Cada link tem um token aleatório difícil de adivinhar. Os dados (incluindo telefones) ficam só no teu servidor. Apaga `data/` depois do evento.

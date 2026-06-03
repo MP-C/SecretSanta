@@ -1,7 +1,6 @@
-"""Modo terminal (sem site): lê FICHEIRO_NOMES, sorteia, atualiza o ficheiro de controlo e gera os links.
-Uso:  python SecretDistribution.py            -> imprime links WhatsApp (wa.me) por pessoa
-      python SecretDistribution.py --enviar   -> envia via WhatsApp Web (pywhatkit), um a um
-"""
+"""Modo terminal. python SecretDistribution.py [--id ID] [--enviar]
+Sem --id: cria um sorteio a partir de FICHEIRO_NOMES. Com --id: usa um sorteio já feito no site.
+--enviar: envio automático via WhatsApp Web (pywhatkit): requer o PC ligado, o browser com sessão iniciada e não mexer no teclado."""
 import json, os, sys
 from dotenv import load_dotenv
 load_dotenv()
@@ -9,15 +8,17 @@ from secret_santa import core
 
 
 def main():
-    with open(os.getenv("FICHEIRO_NOMES", "listNames.json"), encoding="utf-8") as f:
-        nomes = json.load(f)
-    cfg = {"local": os.getenv("LOCAL_JANTAR"), "valor": os.getenv("VALOR_PRESENTE"),
-           "data": os.getenv("DATA_ENTREGA"), "contacto": os.getenv("CONTACTO", "")}
-    try:
-        s = core.criar_sorteio(cfg, nomes)
-    except ValueError as e:
-        sys.exit(f"ERRO: {e}")
-    print(f"Sorteio {s['id']} criado. Controlo em '{os.getenv('FICHEIRO_CONTROLO', 'ficheiro_controlo.txt')}'.")
+    if "--id" in sys.argv:
+        s = core.ler(sys.argv[sys.argv.index("--id") + 1]) or sys.exit("Sorteio não encontrado.")
+    else:
+        with open(os.getenv("FICHEIRO_NOMES", "listNames.json"), encoding="utf-8") as f:
+            nomes = json.load(f)
+        cfg = {"local": os.getenv("LOCAL_JANTAR"), "valor": os.getenv("VALOR_PRESENTE"),
+               "data": os.getenv("DATA_ENTREGA"), "contacto": os.getenv("CONTACTO", "")}
+        try:
+            s = core.criar_sorteio(cfg, nomes)
+        except ValueError as e:
+            sys.exit(f"ERRO: {e}")
     for p in s["participantes"]:
         print(f"\n{p['nome']}: {core.whatsapp_url(p, s)}")
         if "--enviar" in sys.argv:

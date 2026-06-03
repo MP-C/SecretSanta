@@ -1,6 +1,6 @@
 const $=(s,e=document)=>e.querySelector(s);
 async function api(u,o){const r=await fetch(u,o),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.erro||`Algo correu mal (erro ${r.status}). Tenta novamente.`);return j}
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const I=d=>`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICON={
 clip:I('<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>'),
@@ -11,17 +11,26 @@ up:I('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 
 plus:I('<path d="M5 12h14"/><path d="M12 5v14"/>'),
 x:I('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'),
 check:I('<path d="M20 6 9 17l-5-5"/>'),
-coffee:I('<path d="M10 2v2"/><path d="M14 2v2"/><path d="M6 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/>')};
+coffee:I('<path d="M10 2v2"/><path d="M14 2v2"/><path d="M6 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/>'),
+down:I('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>'),
+trash:I('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'),
+gift:I('<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>'),
+mail:I('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>')};
 function copiar(b,txt){const ok=()=>{const h=b.innerHTML;b.innerHTML=ICON.check+'<span class="lbl">Copiado</span>';setTimeout(()=>b.innerHTML=h,1500)};
 (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(ok,()=>{const a=document.createElement("textarea");a.value=txt;document.body.append(a);a.select();try{document.execCommand("copy");ok()}catch{}a.remove()})}
 const cfg=api("/api/config").catch(()=>({}));
 const pronto=new Promise(r=>document.readyState!=="loading"?r():document.addEventListener("DOMContentLoaded",r));
 const url=u=>/^https?:/i.test(u)?u:"https://"+u;
 Promise.all([cfg,pronto]).then(([c])=>{
-const o=[["PayPal","Doação rápida e segura",c.paypal,"P","paypal"],["Revolut","Transferência instantânea",c.revolut,"R","revolut"],["Buy Me a Coffee","Oferecer um café virtual",c.bmc,ICON.coffee,"bmc"]].filter(x=>x[2]);
+const o=[["PayPal","Doação rápida e segura",c.paypal,"P","paypal"],["Revolut","Transferência instantânea",c.revolut,"R","revolut"],["Buy me a Ko-fi","Oferecer um café virtual",c.bmc,ICON.coffee,"bmc"]].filter(x=>x[2]);
 const a=$("#apoio");if(!o.length||!a)return;
 a.innerHTML=`<button type="button" class="b b-ouro">${ICON.coffee}<span>Apoiar</span></button>`;
 const d=document.createElement("dialog");d.className="apoio";
 d.innerHTML=`<div class="topo"><h2>Apoiar o projeto</h2><button type="button" class="b" aria-label="Fechar">${ICON.x}</button></div><p>Se este site te poupou trabalho, podes ajudar a mantê-lo.</p>`+o.map(([t,s,u,i,k])=>`<a class="op op-${k}" href="${esc(url(u))}" target="_blank" rel="noopener"><span class="oi">${i}</span><span><strong>${t}</strong><small>${s}</small></span>${ICON.ext}</a>`).join("");
 document.body.append(d);
 a.firstChild.onclick=()=>d.showModal();$("button",d).onclick=()=>d.close();d.onclick=e=>{if(e.target===d)d.close()}});
+Promise.all([cfg,pronto]).then(([c])=>{
+const o=[["PayPal",c.paypal,"b-azul",""],["Revolut",c.revolut,"b-roxo",""],["Buy me a Ko-fi",c.bmc,"b-ouro",ICON.coffee]].filter(x=>x[1]);
+if(!o.length)return;const f=document.createElement("footer");f.className="rodape";
+f.innerHTML=`<p><strong>Apoiar o projeto</strong><br>Se este site te poupou trabalho, podes ajudar a mantê-lo.</p><div class="acoes">`+o.map(([t,u,k,i])=>`<a class="b ${k}" href="${esc(url(u))}" target="_blank" rel="noopener noreferrer">${i}<span>${t}</span></a>`).join("")+`</div>`;
+document.body.append(f)});
