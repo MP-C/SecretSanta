@@ -1,11 +1,15 @@
 """Backend Flask: API + páginas. Local: python app.py | Produção: gunicorn -w 1 --threads 8 app:app (ou waitress)"""
-import os, threading, time
+import mimetypes, os, threading, time
 from collections import defaultdict, deque
 from dotenv import load_dotenv
 load_dotenv()
 from flask import Flask, Response, jsonify, request, send_from_directory
 from werkzeug.exceptions import HTTPException
 from secret_santa import core
+
+# No Windows o registo do sistema pode dar .js como text/plain; com nosniff o browser recusaria o script.
+for _ext, _tipo in ((".js", "text/javascript"), (".css", "text/css"), (".html", "text/html")):
+    mimetypes.add_type(_tipo, _ext)
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 app.config["MAX_CONTENT_LENGTH"] = 256 * 1024
@@ -71,7 +75,7 @@ def reveal_page(t): return pagina("reveal.html")
 def config():
     g = os.getenv
     return jsonify(local=g("LOCAL_JANTAR", ""), valor=g("VALOR_PRESENTE", ""), data=g("DATA_ENTREGA", ""),
-                   contacto=g("CONTACTO", ""), paypal=g("APOIO_PAYPAL", ""), revolut=g("APOIO_REVOLUT", ""),
+                   contacto=g("CONTACTO", ""), precisa_senha=bool(g("SENHA_CRIAR")), paypal=g("APOIO_PAYPAL", ""), revolut=g("APOIO_REVOLUT", ""),
                    bmc=g("APOIO_KOFI") or g("APOIO_BUYMEACOFFEE", ""))
 
 
@@ -79,6 +83,9 @@ def config():
 def criar():
     d = request.get_json(silent=True)
     if not isinstance(d, dict): return jsonify(erro="Pedido inválido."), 400
+    senha = os.getenv("SENHA_CRIAR")
+    if senha and not core._eq(d.get("senha", ""), senha):
+        return jsonify(erro="Palavra-passe incorreta."), 403
     try:
         s = core.criar_sorteio(d, d.get("participantes", []))
     except ValueError as e:

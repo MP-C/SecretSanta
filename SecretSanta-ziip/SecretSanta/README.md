@@ -53,6 +53,7 @@ python SecretDistribution.py --enviar   # envia via WhatsApp Web (requer pywhatk
 | `LOCAL_JANTAR`, `VALOR_PRESENTE`, `DATA_ENTREGA`, `CONTACTO` | Valores por defeito do formulário e da mensagem |
 | `LINK_DOMINIO` | Domínio público do site |
 | `INDICATIVO_PAIS` | Indicativo para números de 9 dígitos (por defeito `351`) |
+| `SENHA_CRIAR` | Palavra-passe para criar sorteios (vazio = qualquer pessoa pode) |
 | `APOIO_PAYPAL`, `APOIO_REVOLUT`, `APOIO_BUYMEACOFFEE` | Links da janela "Apoiar" no cabeçalho (vazio = oculto) |
 | `DATA_DIR`, `FICHEIRO_MISSOES`, `FICHEIRO_CONTROLO`, `FICHEIRO_NOMES` | Caminhos de ficheiros |
 
@@ -61,6 +62,14 @@ Na página de admin vês quem já tocou na etiqueta (e quando), sem ver o nome q
 
 ## Links nas mensagens
 O `LINK_DOMINIO` tem de ser um endereço acessível aos convidados. `localhost` só funciona no teu computador. Para testar, usa um túnel (ex.: Cloudflare Tunnel ou ngrok) e põe esse endereço no `.env`.
+
+## Publicar em secretsanta.marioc.eu (Cloudflare Tunnel, grátis)
+O GitHub guarda o código mas não executa Python. O site corre no teu computador (ou num servidor teu) e a Cloudflare dá-lhe o endereço e o HTTPS:
+1. Domínio com o DNS na Cloudflare. No painel Zero Trust → Networks → Tunnels, cria um tunnel e instala o `cloudflared` com o comando que a Cloudflare mostra.
+2. Adiciona uma rota: `secretsanta` + `marioc.eu` → serviço `http://localhost:5000`.
+3. No `.env`: `LINK_DOMINIO="https://secretsanta.marioc.eu"`, `TRUST_PROXY="1"`, `HOST="127.0.0.1"`, `CARREGAR_LISTA="0"` e uma `SENHA_CRIAR`.
+4. Arranca com `waitress-serve --listen=127.0.0.1:5000 app:app` e deixa o computador ligado enquanto houver convidados a usar os links.
+5. A pasta `data/` é criada sozinha. Faz cópia de segurança antes do evento e apaga os sorteios depois.
 
 ## Segurança (o que está feito e o que falta)
 Feito: tokens aleatórios de 96+ bits; sem cookies (sem CSRF); texto sempre escapado e CSP sem scripts inline; limites de tamanho e de pedidos por IP; escritas atómicas; servidor só em `127.0.0.1` por defeito; erros sem detalhes internos; botão para apagar o sorteio.
