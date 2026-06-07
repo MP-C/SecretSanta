@@ -81,3 +81,20 @@ Missing (up to you): use **HTTPS** (proxy or Cloudflare Tunnel) with `TRUST_PROX
 Each link has a random token that is hard to guess. The data (including phone numbers) stays only on your server. Delete `data/` after the event.
 
 License: see `LICENSE`.
+
+
+App
+Page 1
+![img_1.png](photo_apps/img_1.png)
+
+Page 2
+![img_2.png](photo_apps/img_2.png)
+
+Page 3
+![img_3.png](photo_apps/img_4.png)
+
+Page 4
+![img_4.png](photo_apps/img_4.png)
+
+Page 5 - Admin
+![img_5.png](photo_apps/img_5.png)

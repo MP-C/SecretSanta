@@ -79,3 +79,20 @@ Falta (é contigo): usar **HTTPS** (proxy ou Cloudflare Tunnel) com `TRUST_PROXY
 Cada link tem um token aleatório difícil de adivinhar. Os dados (incluindo telefones) ficam só no teu servidor. Apaga `data/` depois do evento.
 
 Licença: ver `LICENSE`.
+
+
+App
+Page 1
+![img_1.png](photo_apps/img_1.png)
+
+Page 2
+![img_2.png](photo_apps/img_2.png)
+
+Page 3
+![img_3.png](photo_apps/img_4.png)
+
+Page 4
+![img_4.png](photo_apps/img_4.png)
+
+Page 5 - Admin
+![img_5.png](photo_apps/img_5.png)
