@@ -75,7 +75,7 @@ def reveal_page(t): return pagina("reveal.html")
 def config():
     g = os.getenv
     return jsonify(local=g("LOCAL_JANTAR", ""), valor=g("VALOR_PRESENTE", ""), data=g("DATA_ENTREGA", ""),
-                   contacto=g("CONTACTO", ""), paypal=g("APOIO_PAYPAL", ""), revolut=g("APOIO_REVOLUT", ""),
+                   contacto=g("CONTACTO", ""), precisa_senha=bool(g("SENHA_CRIAR")), paypal=g("APOIO_PAYPAL", ""), revolut=g("APOIO_REVOLUT", ""),
                    bmc=g("APOIO_KOFI") or g("APOIO_BUYMEACOFFEE", ""))
 
 
@@ -83,6 +83,9 @@ def config():
 def criar():
     d = request.get_json(silent=True)
     if not isinstance(d, dict): return jsonify(erro="Pedido inválido."), 400
+    senha = os.getenv("SENHA_CRIAR")
+    if senha and not core._eq(d.get("senha", ""), senha):
+        return jsonify(erro="Palavra-passe incorreta."), 403
     try:
         s = core.criar_sorteio(d, d.get("participantes", []))
     except ValueError as e:

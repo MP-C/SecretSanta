@@ -5,12 +5,14 @@
 <div><label for="local">Local</label><input id="local"></div>
 <div><label for="valor">Valor do presente</label><input id="valor"></div>
 <div><label for="data">Data de entrega</label><input id="data"></div>
-<div><label for="contacto">Quem esclarece dúvidas</label><input id="contacto" placeholder="O teu nome"></div></div></section>
+<div><label for="contacto">Quem esclarece dúvidas</label><input id="contacto" placeholder="O teu nome"></div>
+<div id="senhaBox" hidden><label for="senha">Palavra-passe para criar sorteios</label><input id="senha" type="password" minlength="8" maxlength="26" autocomplete="off" placeholder="Pedir senha ao Gestor"></div></div></section>
 <section class="cartao"><div class="cab"><h2>Participantes</h2><button type="button" class="b b-azul" id="ficheiro"><span>Carregar ficheiro</span></button><input type="file" id="fx" accept=".json,.txt,.csv" hidden></div>
 <details class="ajuda"><summary>Como funcionam as missões, os grupos e os ficheiros</summary>
 <p><strong>Missão secreta</strong> é um desafio extra, escolhido ao acaso da lista e nunca repetido. <strong>Com missão:</strong> recebe sempre uma. <strong>Sem missão:</strong> nunca recebe. <strong>À sorte:</strong> o sistema decide, com 50% de probabilidade. Isto é independente de quem tira quem.</p>
 <p><strong>Grupo:</strong> quem tiver o mesmo grupo (casal, família) não se tira.</p>
 <p><strong>Ficheiro:</strong> um .json (como o listNames.json) ou um .txt com uma pessoa por linha: <em>Nome; telefone; missão; grupo</em> (missão e grupo são opcionais). O ficheiro é lido no teu browser e não é enviado para lado nenhum.</p></details>
 <div id="lista"></div><button type="button" class="b" id="mais"><span>Adicionar participante</span></button></section>
+<p class="sub">Privacidade: os nomes e telefones ficam guardados neste servidor apenas para gerar os convites. Podes apagá-los a qualquer momento na página do sorteio (botão "Apagar sorteio").</p>
 <p id="erro" role="alert"></p><button type="button" id="criar" class="b b-ouro grande">Sortear e gerar links</button></main>
 <script src="/static/index.js"></script></body></html>
