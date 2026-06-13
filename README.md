@@ -140,13 +140,13 @@ Licença: ver `LICENSE`.
 
 App
 Page 1
-![img_1.png](photo_apps/img_1.png)
+![img.png](photo_apps/img.png)
 
 Page 2
 ![img_2.png](photo_apps/img_2.png)
 
 Page 3
-![img_3.png](photo_apps/img_4.png)
+![img_3a.png](photo_apps/img_4.png)
 
 Page 4
 ![img_4.png](photo_apps/img_4.png)

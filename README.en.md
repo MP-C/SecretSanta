@@ -140,7 +140,7 @@ License: see `LICENSE`.
 
 App
 Page 1
-![img_1.png](photo_apps/img_1.png)
+![img.png](photo_apps/img.png)
 
 Page 2
 ![img_2.png](photo_apps/img_2.png)
